@@ -8,6 +8,7 @@
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
 :root{
@@ -114,6 +115,24 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #banner .row{margin-top:10px}
 #gravBox{margin-top:14px}
 audio.rec{width:100%;margin-top:8px}
+/* salas de estudo */
+.salaCard{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px;background:#FBFCFD}
+.salaCard .tit{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px}
+.salaCard .mat{color:var(--muted);font-size:13px;margin:4px 0 10px}
+.membroRow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px}
+.membroRow:last-child{border-bottom:none}
+.membroRow .mud{color:var(--danger);font-size:11px;font-weight:600}
+#gradeVideos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:12px 0}
+#gradeVideos .tile{position:relative;background:#0B1513;border-radius:10px;overflow:hidden;aspect-ratio:16/10}
+#gradeVideos video{width:100%;height:100%;object-fit:contain;display:block}
+#gradeVideos .rot{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:5px;font-family:var(--mono)}
+#salaControles{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+#salaControles .mini{flex:1;min-width:100px}
+#salaControles .ativo{background:var(--call);color:#fff;border-color:var(--call)!important}
+.topico{display:flex;align-items:flex-start;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:14px}
+.topico:last-child{border-bottom:none}
+.topico .quem{color:var(--muted);font-size:11px;font-family:var(--mono)}
+.topico .txt{flex:1;line-height:1.45}
 /* vídeo */
 #videoArea{position:relative;margin:-28px -22px 16px;border-radius:14px 14px 0 0;overflow:hidden;background:#0B1513;aspect-ratio:4/3}
 #vRemote{width:100%;height:100%;object-fit:cover;display:block}
@@ -121,6 +140,10 @@ audio.rec{width:100%;margin-top:8px}
 /* áudio no chat */
 .msg audio{width:230px;max-width:100%;height:38px;display:block}
 #btnChatMic.recording{background:var(--danger);color:#fff;border-color:var(--danger)!important}
+.msg img{max-width:230px;width:100%;border-radius:8px;display:block;cursor:pointer}
+#imgViewer{position:fixed;inset:0;background:rgba(10,18,16,.92);z-index:90;display:none;align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+#imgViewer.show{display:flex}
+#imgViewer img{max-width:100%;max-height:100%;border-radius:10px}
 </style>
 </head>
 <body>
@@ -138,6 +161,7 @@ audio.rec{width:100%;margin-top:8px}
     <button id="tbConta" onclick="aba('conta')"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Conta</button>
     <button id="tbTelefone" class="hide" onclick="aba('telefone')"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2z"/></svg>Telefone<span id="bdPerdidas" class="badge hide"></span></button>
     <button id="tbChat" class="hide" onclick="aba('chat')"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5z"/></svg>Mensagens<span id="bdChat" class="badge hide"></span></button>
+    <button id="tbEstudos" class="hide" onclick="aba('estudos')"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Estudos</button>
   </div>
 </nav>
 <div class="wrap">
@@ -234,6 +258,56 @@ audio.rec{width:100%;margin-top:8px}
     </div>
   </div>
 
+  <!-- ESTUDOS -->
+  <div id="abaEstudos" class="hide">
+    <div id="vSalasLista">
+      <div class="card">
+        <label class="sect">Criar sala de estudos</label>
+        <div class="row">
+          <input id="nsNome" placeholder="Nome da sala">
+          <input id="nsMateria" placeholder="Matéria (ex: Matemática)">
+        </div>
+        <button class="b bp" onclick="criarSala()">Criar sala</button>
+      </div>
+      <div class="card">
+        <label class="sect">Salas disponíveis</label>
+        <div id="listaSalas"><div class="sub">Nenhuma sala criada ainda.</div></div>
+      </div>
+    </div>
+
+    <div id="vSalaDentro" class="hide">
+      <div class="card">
+        <label class="sect" id="salaTitulo">Sala</label>
+        <div class="sub" id="salaMateria" style="text-align:left;margin-bottom:8px"></div>
+        <div id="gradeVideos"></div>
+        <div id="salaControles">
+          <button class="mini bgr" id="btnSalaMudo" onclick="salaToggleMudo()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg><span id="salaMudoTxt">Mudo</span></button>
+          <button class="mini bgr" id="btnSalaCam" onclick="salaToggleCamera()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 8-6 4 6 4V8z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>Câmera</button>
+          <button class="mini bgr" id="btnSalaTela" onclick="salaToggleTela()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>Espelhar tela</button>
+          <button class="mini br" onclick="sairSala()">Sair da sala</button>
+        </div>
+        <label class="sect" style="margin-top:6px">Participantes</label>
+        <div id="salaMembros"></div>
+      </div>
+      <div class="card">
+        <label class="sect">Conversa da sala</label>
+        <div id="salaChatMsgs" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:6px 0"></div>
+        <div class="row" style="margin-top:8px">
+          <input id="salaChatTxt" placeholder="Escreva algo para a sala…" onkeydown="if(event.key==='Enter')salaEnviarMsg()">
+          <button class="mini bp" style="flex:0 0 84px" onclick="salaEnviarMsg()">Enviar</button>
+        </div>
+      </div>
+      <div class="card">
+        <label class="sect">Assuntos da matéria</label>
+        <div id="salaTopicos"><div class="sub">Nenhum assunto anotado.</div></div>
+        <div class="row" style="margin-top:10px">
+          <input id="inpTopico" placeholder="Anotar assunto, dúvida ou tarefa…" onkeydown="if(event.key==='Enter')addTopico()">
+          <button class="mini bp" style="flex:0 0 90px" onclick="addTopico()">Anotar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- CHAT -->
   <div id="abaChat" class="hide">
     <div class="card">
@@ -243,6 +317,7 @@ audio.rec{width:100%;margin-top:8px}
       <div id="chatMsgs"></div>
       <div class="row" style="margin-top:8px">
         <input id="chatTxt" placeholder="Escreva uma mensagem…" onkeydown="if(event.key==='Enter')enviarMsg()">
+        <button class="mini bgr" style="flex:0 0 44px" id="btnChatImg" title="Enviar foto" onclick="document.getElementById('inpChatImg').click()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.4 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
         <button class="mini bgr" style="flex:0 0 44px" id="btnChatMic" title="Gravar mensagem de voz" onclick="gravarAudioChat()"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg></button>
         <button class="mini bp" style="flex:0 0 84px" onclick="enviarMsg()">Enviar</button>
       </div>
@@ -308,6 +383,8 @@ audio.rec{width:100%;margin-top:8px}
  </div>
 </div>
 
+<input type="file" id="inpChatImg" accept="image/*" class="hide" onchange="enviarImagemChat(this)">
+<div id="imgViewer" onclick="this.classList.remove('show')"><img id="imgViewerImg" alt=""></div>
 <div id="toast"></div>
 
 <script>
@@ -323,6 +400,20 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const auth = firebase.auth();
+let authPronto = false;
+const authPromise = new Promise((resolve)=>{
+  auth.onAuthStateChanged(user=>{
+    if(user){ authPronto=true; resolve(user); }
+  });
+  auth.signInAnonymously().catch(err=>{
+    console.error('Falha na autenticação anônima do Firebase:',err);
+    document.addEventListener('DOMContentLoaded',()=>{
+      const el=document.getElementById('painelLista');
+      if(el)el.innerHTML='<div class="err">Não foi possível autenticar no banco de dados. Verifique se o método "Anonymous" está ativado em Authentication no Console do Firebase.</div>';
+    });
+  });
+});
 
 /* ============ PWA (manifest dinâmico) ============ */
 try{
@@ -336,13 +427,28 @@ const ICP={"phone": "<path d=\"M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.
 function ic(n){return '<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+ICP[n]+'</svg>';}
 /* ============ ESTADO ============ */
 const PREFIX="pdv1-ramal-";
-const ICE={iceServers:[
+/* ===== SERVIDORES DE CONEXÃO (ICE) =====
+   Preencha TURN_API com a URL da sua API no Vercel, ex:
+   const TURN_API="https://seu-projeto.vercel.app/api/turn";
+   Com a API no ar, as credenciais saem do HTML. Se a API falhar,
+   o sistema usa o fallback abaixo (troque/apague as credenciais dele
+   depois que a API estiver funcionando). */
+const TURN_API="";
+let ICE={iceServers:[
   {urls:"stun:stun.relay.metered.ca:80"},
   {urls:"turn:standard.relay.metered.ca:80",username:"bf90901f63129b9e5221dfdc",credential:"G6EJ/OtfTt+EBrND"},
-  {urls:"turn:standard.relay.metered.ca:80?transport=tcp",username:"bf90901f63129b9e5221dfdc",credential:"G6EJ/OtfTt+EBrND"},
   {urls:"turn:standard.relay.metered.ca:443",username:"bf90901f63129b9e5221dfdc",credential:"G6EJ/OtfTt+EBrND"},
   {urls:"turns:standard.relay.metered.ca:443?transport=tcp",username:"bf90901f63129b9e5221dfdc",credential:"G6EJ/OtfTt+EBrND"}
 ]};
+let iceCarregado=false;
+async function carregarICE(){
+  if(!TURN_API||iceCarregado)return;
+  try{
+    const r=await fetch(TURN_API,{cache:"no-store"});
+    const j=await r.json();
+    if(j&&j.iceServers){ICE=j;iceCarregado=true;}
+  }catch(e){console.warn("API TURN indisponível, usando fallback.",e);}
+}
 let usuario=null, peer=null;
 let ramaisCache={}, usuariosCache={};
 let ctx=null, micStream=null, micSource=null;
@@ -386,7 +492,7 @@ function pararRing(){clearInterval(ringInt);ringInt=null;if(navigator.vibrate)na
 
 /* ============ ABAS ============ */
 function aba(a){
-  ['painel','conta','telefone','chat','admin'].forEach(x=>{
+  ['painel','conta','telefone','chat','estudos','admin'].forEach(x=>{
     const d=document.getElementById('aba'+x[0].toUpperCase()+x.slice(1));
     if(d)d.classList.toggle('hide',x!==a);
     const tb=document.getElementById('tb'+x[0].toUpperCase()+x.slice(1));
@@ -398,11 +504,16 @@ function mostrarCadastro(){document.getElementById('cardLogin').classList.add('h
 function mostrarLogin(){document.getElementById('cardCadastro').classList.add('hide');document.getElementById('cardLogin').classList.remove('hide');}
 
 /* ============ LISTENERS GLOBAIS FIREBASE ============ */
-db.ref('ramais').on('value',snap=>{
-  ramaisCache=snap.val()||{};
-  renderPainel();renderTelefone();renderAdmin();popularChatDest();
-},e=>{document.getElementById('painelLista').innerHTML='<div class="err">Sem permissão de acesso ao banco de dados (PERMISSION_DENIED: libere as regras do Realtime Database.</div>';});
-db.ref('usuarios').on('value',snap=>{usuariosCache=snap.val()||{};renderAdmin();});
+authPromise.then(()=>{
+  db.ref('ramais').on('value',snap=>{
+    ramaisCache=snap.val()||{};
+    renderPainel();renderTelefone();renderAdmin();popularChatDest();
+  },e=>{
+    console.error(e);
+    document.getElementById('painelLista').innerHTML='<div class="err">Sem permissão de acesso ao banco de dados (PERMISSION_DENIED). Confira as Regras do Realtime Database e se a Autenticação Anônima está ativada.</div>';
+  });
+  db.ref('usuarios').on('value',snap=>{usuariosCache=snap.val()||{};renderAdmin();});
+});
 
 function nomeSt(st){return st==='online'?'ATIVO':st==='ocupado'?'EM CHAMADA':st==='dnd'?'NÃO PERTURBE':'INATIVO';}
 function renderPainel(){
@@ -431,6 +542,7 @@ async function cadastrar(){
   if(!window.crypto||!crypto.subtle)return err.innerText="Abra em HTTPS (ou localhost).";
   try{
     err.innerText="Verificando…";
+    await authPromise;
     if((await db.ref('usuarios/'+login).once('value')).exists()){err.innerText="Este usuário já existe.";return;}
     if((await db.ref('ramais/'+ramal).once('value')).exists()){err.innerText="O ramal "+ramal+" já pertence a outro usuário.";return;}
     const total=(await db.ref('usuarios').once('value')).numChildren();
@@ -451,7 +563,7 @@ async function login(){
   const err=document.getElementById('lErr');err.innerText='';
   if(!l||!p)return err.innerText="Preencha usuário e senha.";
   let snap;
-  try{snap=await db.ref('usuarios/'+l).once('value');}
+  try{await authPromise;snap=await db.ref('usuarios/'+l).once('value');}
   catch(e){return err.innerText=String(e).includes('PERMISSION')?"Sem permissão no banco de dados: libere as regras.":"Erro de conexão.";}
   if(!snap.exists())return err.innerText="Usuário não encontrado.";
   const u=snap.val();
@@ -476,17 +588,20 @@ function entrarNoSistema(){
   document.getElementById('hUser').classList.remove('hide');
   document.getElementById('tbTelefone').classList.remove('hide');
   document.getElementById('tbChat').classList.remove('hide');
+  document.getElementById('tbEstudos').classList.remove('hide');
   if(window.Notification&&Notification.permission==='default')Notification.requestPermission();
-  iniciarPeer();escutarHistorico();escutarRecados();escutarAvisos();escutarTodosChats();
+  iniciarPeer();escutarHistorico();escutarRecados();escutarAvisos();escutarTodosChats();escutarSalas();
   aba('telefone');
 }
 
 function logout(){
+  if(salaAtual)sairSala(true);
   if(usuario){db.ref('ramais/'+usuario.ramal).update({status:'offline'});logAud('Logout');}
   localStorage.removeItem('sessao');location.reload();
 }
 
 window.addEventListener('load',async()=>{
+  await authPromise;
   const s=localStorage.getItem('sessao');
   if(!s)return;
   try{
@@ -524,7 +639,8 @@ async function salvarPerfil(){
 }
 
 /* ============ PEER ============ */
-function iniciarPeer(){
+async function iniciarPeer(){
+  await carregarICE();
   peer=new Peer(PREFIX+usuario.ramal,{config:ICE});
   peer.on('open',()=>{
     document.getElementById('dot').classList.add('on');document.getElementById('connTxt').innerText='conectado';
@@ -535,6 +651,13 @@ function iniciarPeer(){
 
   peer.on('call',async(call)=>{
     const origem=(call.peer||'').replace(PREFIX,'');
+    /* chamadas de sala de estudo: auto-atende em malha */
+    if(call.metadata&&call.metadata.sala){
+      if(salaAtual&&call.metadata.sala===salaAtual)await salaAtenderMesh(origem,call);
+      else call.close();
+      return;
+    }
+    if(salaAtual){call.close();return;} /* ocupado estudando */
     /* aviso geral: auto-atende só ouvindo */
     if(autoAtenderDe && origem===autoAtenderDe){
       await prepararAudio(false);
@@ -669,6 +792,7 @@ async function ligarPara(destino,opts={}){
   destino=String(destino||'').trim();
   if(!destino)return toast("Digite o ramal.");
   if(destino===usuario.ramal)return toast("Não pode ligar para si mesmo.");
+  if(salaAtual)return toast("Saia da sala de estudos para fazer chamadas.");
   if(participantes[destino]||emEspera[destino])return toast("Este ramal já está na chamada.");
   const info=ramaisCache[destino];
   if(!info)return toast("Ramal "+destino+" não existe.");
@@ -1352,7 +1476,7 @@ function abrirChat(){
     const keys=Object.keys(dados).sort((a,b)=>dados[a].ts-dados[b].ts);
     box.innerHTML=keys.map(k=>{
       const m=dados[k];
-      const corpo=m.audio?`<audio controls preload="metadata" src="${m.audio}"></audio>`:esc(m.txt);
+      const corpo=m.img?`<img src="${m.img}" alt="foto" onclick="verImagem(this.src)">`:m.audio?`<audio controls preload="metadata" src="${m.audio}"></audio>`:esc(m.txt);
       return `<div class="msg ${m.de===usuario.ramal?'eu':'ele'}">${corpo}<div class="h">${fmtTs(m.ts)}</div></div>`;
     }).join('');
     box.scrollTop=box.scrollHeight;
@@ -1388,6 +1512,34 @@ async function gravarAudioChat(){
     chatRecTimer=setTimeout(()=>{if(chatRec&&chatRec.state==='recording')chatRec.stop();},30000);
   }catch(e){alert("Permita o acesso ao microfone!");}
 }
+function enviarImagemChat(inp){
+  const file=inp.files&&inp.files[0];
+  inp.value='';
+  if(!file)return;
+  if(!chatCom)return toast("Escolha primeiro com quem conversar.");
+  if(!file.type.startsWith('image/'))return toast("Envie apenas imagens.");
+  const img=new Image();
+  const fr=new FileReader();
+  fr.onload=()=>{img.src=fr.result;};
+  img.onload=()=>{
+    const MAX=1000;
+    let w=img.width,h=img.height;
+    if(w>MAX||h>MAX){const f=MAX/Math.max(w,h);w=Math.round(w*f);h=Math.round(h*f);}
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    let q=0.75,data=cv.toDataURL('image/jpeg',q);
+    while(data.length>420000&&q>0.35){q-=0.1;data=cv.toDataURL('image/jpeg',q);}
+    if(data.length>420000)return toast("Imagem muito pesada mesmo comprimida — tente outra.");
+    db.ref('chats/'+chaveChat(usuario.ramal,chatCom)).push({de:usuario.ramal,para:chatCom,img:data,ts:Date.now()});
+    toast("Foto enviada.");
+  };
+  img.onerror=()=>toast("Não foi possível ler essa imagem.");
+  fr.readAsDataURL(file);
+}
+function verImagem(src){
+  document.getElementById('imgViewerImg').src=src;
+  document.getElementById('imgViewer').classList.add('show');
+}
 function enviarMsg(){
   const txt=document.getElementById('chatTxt').value.trim();
   if(!txt||!chatCom)return;
@@ -1406,7 +1558,7 @@ function escutarTodosChats(){
       Object.values(all[key]).forEach(m=>{
         if(m.de!==usuario.ramal&&m.ts>visto){
           unread[outro]=(unread[outro]||0)+1;
-          if(m.ts>Date.now()-4000)notificar("Mensagem do ramal "+m.de,m.txt||"Mensagem de voz");
+          if(m.ts>Date.now()-4000)notificar("Mensagem do ramal "+m.de,m.txt||(m.img?"Foto":"Mensagem de voz"));
         }
       });
     });
@@ -1418,6 +1570,346 @@ function atualizarBadgeChat(){
   const bd=document.getElementById('bdChat');
   if(total>0){bd.innerText=total;bd.classList.remove('hide');}else bd.classList.add('hide');
 }
+
+
+/* ============ SALAS DE ESTUDO (estilo Discord) ============ */
+let salasCache={}, salaAtual=null, salaRef=null, salaLocalFallback=null;
+let salaPeers={};            // ramal -> {call,dest,source,ghost,sender}
+let salaMudo=true, salaVideoModo=null, salaMicAtivo=false; // null|'cam'|'screen'
+let salaCamStream=null, salaTelaStream=null, placeTrack=null;
+
+function escutarSalas(){
+  db.ref('salas').on('value',snap=>{
+    salasCache=snap.val()||{};
+    renderSalas();
+    if(salaAtual&&!salasCache[salaAtual]){toast("A sala foi encerrada pelo criador.");sairSala(true);}
+    if(salaAtual)renderSalaDentro();
+  },e=>{
+    console.error(e);
+    document.getElementById('listaSalas').innerHTML=
+      '<div class="err">Sem permissão para acessar as salas (PERMISSION_DENIED).<br>Adicione o nó "salas" nas Regras do Realtime Database.</div>';
+  });
+}
+function renderSalas(){
+  const el=document.getElementById('listaSalas');
+  const ids=Object.keys(salasCache).sort((a,b)=>(salasCache[b].criadaEm||0)-(salasCache[a].criadaEm||0));
+  if(!ids.length){el.innerHTML='<div class="sub">Nenhuma sala criada ainda.</div>';return;}
+  el.innerHTML=ids.map(id=>{
+    const sl=salasCache[id];
+    const n=Object.keys(sl.membros||{}).length;
+    const dono=sl.criador===usuario.ramal;
+    return `<div class="salaCard">
+      <div class="tit">${esc(sl.nome)} <span class="tag on">${n} online</span></div>
+      <div class="mat">${esc(sl.materia||'Sem matéria')} &middot; criada por ${esc(sl.criadorNome||sl.criador)}</div>
+      <div class="row">
+        <button class="mini bg" onclick="entrarSala('${id}')">Entrar</button>
+        ${dono?`<button class="mini br" style="flex:0 0 100px" onclick="excluirSala('${id}')">Excluir</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+async function criarSala(){
+  const nome=document.getElementById('nsNome').value.trim();
+  const materia=document.getElementById('nsMateria').value.trim();
+  if(!nome)return toast("Dê um nome à sala.");
+  try{
+    const ref=db.ref('salas').push();
+    const dados={nome,materia,criador:usuario.ramal,criadorNome:usuario.nome,criadaEm:Date.now()};
+    await ref.set(dados);
+    document.getElementById('nsNome').value='';document.getElementById('nsMateria').value='';
+    entrarSala(ref.key,dados);
+  }catch(e){
+    console.error(e);
+    toast(String(e).includes('PERMISSION')?"Sem permissão no banco: adicione o nó \"salas\" nas Regras do Firebase.":"Erro ao criar sala: "+(e.message||e));
+  }
+}
+async function excluirSala(id){
+  const sl=salasCache[id];
+  if(!sl||sl.criador!==usuario.ramal)return;
+  if(!confirm("Encerrar a sala \""+sl.nome+"\" para todos?"))return;
+  await db.ref('salas/'+id).remove();
+}
+function placeholderTrack(){
+  if(placeTrack&&placeTrack.readyState==='live')return placeTrack;
+  const cv=document.createElement('canvas');cv.width=4;cv.height=4;
+  cv.getContext('2d').fillRect(0,0,4,4);
+  placeTrack=cv.captureStream(2).getVideoTracks()[0];
+  return placeTrack;
+}
+async function entrarSala(id,dadosConhecidos){
+  if(emChamada)return toast("Encerre a chamada antes de entrar numa sala.");
+  if(salaAtual)return toast("Você já está em uma sala.");
+  try{
+    try{await prepararAudio(false);}catch(e){alert("Não foi possível iniciar o áudio deste aparelho.");return;}
+    salaAtual=id;salaMudo=true;salaVideoModo=null;salaMicAtivo=false;
+    salaLocalFallback=dadosConhecidos||salasCache[id]||{nome:'Sala',materia:'',criador:usuario.ramal,criadorNome:usuario.nome};
+    db.ref('ramais/'+usuario.ramal).update({status:'ocupado'});
+
+    /* mostra a tela da sala IMEDIATAMENTE, sem esperar round-trip do banco */
+    document.getElementById('vSalasLista').classList.add('hide');
+    document.getElementById('vSalaDentro').classList.remove('hide');
+    renderSalaDentro();
+    pedirWakeLock();
+
+    const meuRef=db.ref('salas/'+id+'/membros/'+usuario.ramal);
+    await meuRef.set({nome:usuario.nome,ts:Date.now(),mudo:true,video:null});
+    meuRef.onDisconnect().remove();
+
+    /* liga em malha para quem já está na sala */
+    const membros=(salasCache[id]&&salasCache[id].membros)||{};
+    Object.keys(membros).forEach(r=>{if(r!==usuario.ramal)salaLigarPara(id,r);});
+  }catch(e){
+    console.error(e);
+    salaAtual=null;
+    document.getElementById('vSalaDentro').classList.add('hide');
+    document.getElementById('vSalasLista').classList.remove('hide');
+    toast(String(e).includes('PERMISSION')?"Sem permissão no banco: adicione o nó \"salas\" nas Regras do Firebase.":"Erro ao entrar na sala: "+(e.message||e));
+  }
+}
+function salaOutStream(dest){
+  return new MediaStream([dest.stream.getAudioTracks()[0],placeholderTrack()]);
+}
+function salaLigarPara(id,r){
+  if(salaPeers[r])return;
+  const dest=ctx.createMediaStreamDestination();
+  if(micSource)micSource.connect(dest);
+  const call=peer.call(PREFIX+r,salaOutStream(dest),{metadata:{sala:id}});
+  salaRegistrar(r,call,dest);
+}
+async function salaAtenderMesh(origem,call){
+  try{await prepararAudio(false);}catch(e){call.close();return;}
+  const dest=ctx.createMediaStreamDestination();
+  if(micSource)micSource.connect(dest);
+  call.answer(salaOutStream(dest));
+  salaRegistrar(origem,call,dest);
+}
+function salaRegistrar(r,call,dest){
+  const p={call,dest,source:null,ghost:null,sender:null};
+  salaPeers[r]=p;
+  call.on('stream',rs=>{
+    const g=new Audio();g.srcObject=rs;g.muted=true;g.play().catch(()=>{});
+    p.ghost=g;
+    if(rs.getAudioTracks().length){
+      p.source=ctx.createMediaStreamSource(new MediaStream(rs.getAudioTracks()));
+      p.source.connect(masterOut);
+    }
+    p.remoteStream=rs;
+    /* aplica meu vídeo atual (se já ligado) a esta conexão nova */
+    aplicarMeuVideo(p);
+    renderSalaDentro();
+  });
+  call.on('close',()=>{
+    try{p.source&&p.source.disconnect();}catch(e){}
+    try{p.ghost&&(p.ghost.srcObject=null);}catch(e){}
+    delete salaPeers[r];
+    renderSalaDentro();
+  });
+}
+function aplicarMeuVideo(p){
+  try{
+    const pc=p.call&&p.call.peerConnection;
+    if(!pc){console.warn('aplicarMeuVideo: sem peerConnection ainda para',p);return;}
+    const sender=pc.getSenders().find(sn=>sn.track&&sn.track.kind==='video');
+    if(!sender){console.warn('aplicarMeuVideo: nenhum sender de vídeo encontrado');return;}
+    const trk=salaVideoModo==='cam'?(salaCamStream&&salaCamStream.getVideoTracks()[0]):
+              salaVideoModo==='screen'?(salaTelaStream&&salaTelaStream.getVideoTracks()[0]):placeholderTrack();
+    if(trk)sender.replaceTrack(trk);
+  }catch(e){console.error('Erro ao aplicar vídeo:',e);}
+}
+async function salaAtivarMicrofone(){
+  if(salaMicAtivo){
+    salaToggleMudo();return;
+  }
+  try{
+    if(!ctx){await prepararAudio(false);}
+    if(ctx.state==='suspended')await ctx.resume();
+    if(!micStream){
+      micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      micSource=ctx.createMediaStreamSource(micStream);
+    }
+    salaMicAtivo=true;salaMudo=false;
+    Object.values(salaPeers).forEach(p=>{
+      try{micSource.connect(p.dest);}catch(e){console.error('Erro ao ligar mic a',p,e);}
+    });
+    micStream.getAudioTracks().forEach(t=>t.enabled=true);
+    atualizarBotaoMic();
+    toast("Microfone ativado.");
+    if(salaAtual)db.ref('salas/'+salaAtual+'/membros/'+usuario.ramal+'/mudo').set(false);
+  }catch(e){
+    console.error('Erro ao ativar microfone:',e);
+    toast("Não foi possível ativar o microfone: "+(e.message||e.name||e));
+  }
+}
+function atualizarBotaoMic(){
+  const btn=document.getElementById('btnSalaMudo'),txt=document.getElementById('salaMudoTxt');
+  if(!salaMicAtivo){btn.classList.remove('ativo');btn.classList.add('bo');txt.innerText="Ativar microfone";}
+  else{btn.classList.remove('bo');btn.classList.toggle('ativo',!salaMudo);txt.innerText=salaMudo?"Mudo: ativado":"Microfone ligado";}
+}
+function salaToggleMudo(){
+  if(!salaMicAtivo)return salaAtivarMicrofone();
+  if(!micStream)return;
+  salaMudo=!salaMudo;
+  micStream.getAudioTracks().forEach(t=>t.enabled=!salaMudo);
+  atualizarBotaoMic();
+  if(salaAtual)db.ref('salas/'+salaAtual+'/membros/'+usuario.ramal+'/mudo').set(salaMudo);
+}
+async function salaToggleCamera(){
+  if(!salaAtual)return toast("Você não está em uma sala.");
+  if(salaVideoModo==='cam'){return salaDesligarVideo();}
+  try{
+    if(ctx&&ctx.state==='suspended')await ctx.resume();
+    const st=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+    if(salaTelaStream){salaTelaStream.getTracks().forEach(t=>t.stop());salaTelaStream=null;}
+    salaCamStream=st;salaVideoModo='cam';
+    Object.values(salaPeers).forEach(aplicarMeuVideo);
+    db.ref('salas/'+salaAtual+'/membros/'+usuario.ramal+'/video').set('cam');
+    atualizarBotoesVideo();renderSalaDentro();
+    toast("Câmera ligada.");
+  }catch(e){
+    console.error('Erro ao ligar câmera:',e);
+    toast("Não foi possível acessar a câmera: "+(e.message||e.name||e));
+  }
+}
+async function salaToggleTela(){
+  if(!salaAtual)return toast("Você não está em uma sala.");
+  if(salaVideoModo==='screen'){return salaDesligarVideo();}
+  if(!navigator.mediaDevices.getDisplayMedia)return toast("Este aparelho/navegador não permite espelhar a tela. Use um computador com Chrome, Edge ou Firefox.");
+  try{
+    if(ctx&&ctx.state==='suspended')await ctx.resume();
+    const st=await navigator.mediaDevices.getDisplayMedia({video:true});
+    if(salaCamStream){salaCamStream.getTracks().forEach(t=>t.stop());salaCamStream=null;}
+    salaTelaStream=st;salaVideoModo='screen';
+    st.getVideoTracks()[0].onended=()=>salaDesligarVideo();
+    Object.values(salaPeers).forEach(aplicarMeuVideo);
+    db.ref('salas/'+salaAtual+'/membros/'+usuario.ramal+'/video').set('screen');
+    atualizarBotoesVideo();renderSalaDentro();
+    toast("Compartilhando a tela.");
+  }catch(e){
+    console.error('Erro ao espelhar tela:',e);
+    toast("Espelhamento cancelado ou não permitido: "+(e.message||e.name||e));
+  }
+}
+function salaDesligarVideo(){
+  if(salaCamStream){salaCamStream.getTracks().forEach(t=>t.stop());salaCamStream=null;}
+  if(salaTelaStream){salaTelaStream.getTracks().forEach(t=>t.stop());salaTelaStream=null;}
+  salaVideoModo=null;
+  Object.values(salaPeers).forEach(aplicarMeuVideo);
+  if(salaAtual)db.ref('salas/'+salaAtual+'/membros/'+usuario.ramal+'/video').set(null);
+  atualizarBotoesVideo();renderSalaDentro();
+}
+function atualizarBotoesVideo(){
+  document.getElementById('btnSalaCam').classList.toggle('ativo',salaVideoModo==='cam');
+  document.getElementById('btnSalaTela').classList.toggle('ativo',salaVideoModo==='screen');
+}
+function sairSala(silencioso){
+  if(!salaAtual)return;
+  const id=salaAtual;salaAtual=null;salaMicAtivo=false;
+  if(salaChatRef){salaChatRef.off();salaChatRef=null;salaChatSala=null;}
+  db.ref('salas/'+id+'/membros/'+usuario.ramal).remove();
+  Object.values(salaPeers).forEach(p=>{try{p.call.close();}catch(e){}});
+  salaPeers={};
+  salaDesligarVideo();
+  salaMudo=false;
+  document.getElementById('salaMudoTxt').innerText="Mudo";
+  document.getElementById('btnSalaMudo').classList.remove('ativo');
+  if(micStream)micStream.getAudioTracks().forEach(t=>t.enabled=true);
+  db.ref('ramais/'+usuario.ramal).update({status:meuStatus()==='dnd'?'dnd':'online'});
+  document.getElementById('vSalaDentro').classList.add('hide');
+  document.getElementById('vSalasLista').classList.remove('hide');
+  soltarWakeLock();
+  if(!silencioso)toast("Você saiu da sala.");
+}
+function renderSalaDentro(){
+  if(!salaAtual)return;
+  atualizarBotaoMic();
+  escutarSalaChat();
+  const sl=salasCache[salaAtual]||salaLocalFallback||{nome:'Sala',materia:'',membros:{},criador:usuario.ramal,criadorNome:usuario.nome};
+  document.getElementById('salaTitulo').innerText=sl.nome;
+  document.getElementById('salaMateria').innerText=(sl.materia?sl.materia+" · ":"")+"criada por "+(sl.criadorNome||sl.criador);
+  const membros=sl.membros||{};
+  /* participantes */
+  document.getElementById('salaMembros').innerHTML=Object.keys(membros).sort((a,b)=>a-b).map(r=>{
+    const m=membros[r];
+    return `<div class="membroRow"><span class="st online"></span>
+      <span class="num">${esc(r)}</span><span style="flex:1">${esc(m.nome)}${r===usuario.ramal?' (você)':''}</span>
+      ${m.video==='cam'?'<span class="tag on">câmera</span>':m.video==='screen'?'<span class="tag oc">tela</span>':''}
+      ${m.mudo?'<span class="mud">MUDO</span>':''}</div>`;
+  }).join('');
+  /* grade de vídeos */
+  const grade=document.getElementById('gradeVideos');
+  let tiles='';
+  if(salaVideoModo)tiles+=`<div class="tile"><video id="tile-eu" autoplay playsinline muted></video><span class="rot">Você</span></div>`;
+  Object.keys(salaPeers).forEach(r=>{
+    const mv=(membros[r]||{}).video;
+    if(mv&&salaPeers[r].remoteStream)tiles+=`<div class="tile"><video id="tile-${r}" autoplay playsinline muted></video><span class="rot">${esc(r)}</span></div>`;
+  });
+  grade.innerHTML=tiles;
+  if(salaVideoModo){
+    const v=document.getElementById('tile-eu');
+    if(v)v.srcObject=salaVideoModo==='cam'?salaCamStream:salaTelaStream;
+  }
+  Object.keys(salaPeers).forEach(r=>{
+    const v=document.getElementById('tile-'+r);
+    if(v&&salaPeers[r].remoteStream)v.srcObject=salaPeers[r].remoteStream;
+  });
+  /* tópicos */
+  escutarTopicos();
+}
+let topRef=null,topSala=null;
+function escutarTopicos(){
+  if(topSala===salaAtual)return;
+  if(topRef)topRef.off();
+  topSala=salaAtual;
+  topRef=db.ref('salas/'+salaAtual+'/topicos');
+  topRef.on('value',snap=>{
+    const dados=snap.val()||{};
+    const el=document.getElementById('salaTopicos');
+    const keys=Object.keys(dados).sort((a,b)=>dados[a].ts-dados[b].ts);
+    if(!keys.length){el.innerHTML='<div class="sub">Nenhum assunto anotado.</div>';return;}
+    const sl=salasCache[salaAtual]||{};
+    el.innerHTML=keys.map(k=>{
+      const t=dados[k];
+      const pode=t.de===usuario.ramal||sl.criador===usuario.ramal;
+      return `<div class="topico"><div style="flex:1"><div class="txt">${esc(t.txt)}</div>
+        <div class="quem">${esc(t.deNome||t.de)} · ${fmtTs(t.ts)}</div></div>
+        ${pode?`<button class="mini bgr" style="padding:4px 9px" onclick="delTopico('${k}')">×</button>`:''}</div>`;
+    }).join('');
+  });
+}
+function addTopico(){
+  const txt=document.getElementById('inpTopico').value.trim();
+  if(!txt||!salaAtual)return;
+  db.ref('salas/'+salaAtual+'/topicos').push({txt,de:usuario.ramal,deNome:usuario.nome,ts:Date.now()});
+  document.getElementById('inpTopico').value='';
+}
+function delTopico(k){if(salaAtual)db.ref('salas/'+salaAtual+'/topicos/'+k).remove();}
+
+let salaChatRef=null,salaChatSala=null;
+function escutarSalaChat(){
+  if(salaChatSala===salaAtual)return;
+  if(salaChatRef)salaChatRef.off();
+  salaChatSala=salaAtual;
+  if(!salaAtual)return;
+  salaChatRef=db.ref('salas/'+salaAtual+'/mensagens').limitToLast(80);
+  salaChatRef.on('value',snap=>{
+    const dados=snap.val()||{};
+    const box=document.getElementById('salaChatMsgs');if(!box)return;
+    const keys=Object.keys(dados).sort((a,b)=>dados[a].ts-dados[b].ts);
+    box.innerHTML=keys.map(k=>{
+      const m=dados[k];
+      return `<div class="msg ${m.de===usuario.ramal?'eu':'ele'}">${esc(m.txt)}<div class="h">${esc(m.deNome||m.de)} · ${fmtTs(m.ts)}</div></div>`;
+    }).join('');
+    box.scrollTop=box.scrollHeight;
+  },e=>console.error(e));
+}
+function salaEnviarMsg(){
+  const inp=document.getElementById('salaChatTxt');
+  const txt=inp.value.trim();
+  if(!txt||!salaAtual)return;
+  db.ref('salas/'+salaAtual+'/mensagens').push({txt,de:usuario.ramal,deNome:usuario.nome,ts:Date.now()});
+  inp.value='';
+}
+window.addEventListener('beforeunload',()=>{if(salaAtual)db.ref('salas/'+salaAtual+'/membros/'+usuario.ramal).remove();});
 
 function renderAdmin(){}
 </script>
