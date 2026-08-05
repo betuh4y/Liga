@@ -401,18 +401,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
-let authPronto = false;
+let authPronto = false, authErro = null;
 const authPromise = new Promise((resolve)=>{
   auth.onAuthStateChanged(user=>{
     if(user){ authPronto=true; resolve(user); }
   });
   auth.signInAnonymously().catch(err=>{
+    authErro=err;
     console.error('Falha na autenticação anônima do Firebase:',err);
-    document.addEventListener('DOMContentLoaded',()=>{
-      const el=document.getElementById('painelLista');
-      if(el)el.innerHTML='<div class="err">Não foi possível autenticar no banco de dados. Verifique se o método "Anonymous" está ativado em Authentication no Console do Firebase.</div>';
-    });
+    resolve(null); /* libera quem estiver esperando, em vez de travar para sempre */
   });
+  /* rede de segurança: se em 10s nada respondeu, libera e mostra erro */
+  setTimeout(()=>{ if(!authPronto){ authErro=authErro||{code:'timeout',message:'tempo esgotado'}; resolve(null); } },10000);
+});
+function msgErroAuth(){
+  if(!authErro)return"Sem conexão com o banco de dados.";
+  const c=String(authErro.code||'');
+  if(c.includes('unauthorized-domain'))return'Este endereço (domínio) não está autorizado no Firebase. Vá em Authentication → Settings → Authorized domains e adicione '+location.hostname+'.';
+  if(c.includes('operation-not-allowed'))return'A Autenticação Anônima está desativada. Ative em Authentication → Sign-in method → Anonymous.';
+  if(c==='timeout')return'O banco de dados demorou demais para responder. Verifique sua internet e tente novamente.';
+  return'Falha na autenticação: '+(authErro.message||c);
+}
+authPromise.then(()=>{
+  if(!authPronto){
+    const p=document.getElementById('painelLista');
+    if(p)p.innerHTML='<div class="err">'+msgErroAuth()+'</div>';
+  }
 });
 
 /* ============ PWA (manifest dinâmico) ============ */
@@ -543,6 +557,7 @@ async function cadastrar(){
   try{
     err.innerText="Verificando…";
     await authPromise;
+    if(!authPronto){err.innerText=msgErroAuth();return;}
     if((await db.ref('usuarios/'+login).once('value')).exists()){err.innerText="Este usuário já existe.";return;}
     if((await db.ref('ramais/'+ramal).once('value')).exists()){err.innerText="O ramal "+ramal+" já pertence a outro usuário.";return;}
     const total=(await db.ref('usuarios').once('value')).numChildren();
@@ -563,7 +578,12 @@ async function login(){
   const err=document.getElementById('lErr');err.innerText='';
   if(!l||!p)return err.innerText="Preencha usuário e senha.";
   let snap;
-  try{await authPromise;snap=await db.ref('usuarios/'+l).once('value');}
+  err.innerText="Verificando…";
+  try{
+    await authPromise;
+    if(!authPronto){err.innerText=msgErroAuth();return;}
+    snap=await db.ref('usuarios/'+l).once('value');
+  }
   catch(e){return err.innerText=String(e).includes('PERMISSION')?"Sem permissão no banco de dados: libere as regras.":"Erro de conexão.";}
   if(!snap.exists())return err.innerText="Usuário não encontrado.";
   const u=snap.val();
