@@ -8,7 +8,6 @@
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
 :root{
@@ -400,34 +399,6 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const auth = firebase.auth();
-let authPronto = false, authErro = null;
-const authPromise = new Promise((resolve)=>{
-  auth.onAuthStateChanged(user=>{
-    if(user){ authPronto=true; resolve(user); }
-  });
-  auth.signInAnonymously().catch(err=>{
-    authErro=err;
-    console.error('Falha na autenticação anônima do Firebase:',err);
-    resolve(null); /* libera quem estiver esperando, em vez de travar para sempre */
-  });
-  /* rede de segurança: se em 10s nada respondeu, libera e mostra erro */
-  setTimeout(()=>{ if(!authPronto){ authErro=authErro||{code:'timeout',message:'tempo esgotado'}; resolve(null); } },10000);
-});
-function msgErroAuth(){
-  if(!authErro)return"Sem conexão com o banco de dados.";
-  const c=String(authErro.code||'');
-  if(c.includes('unauthorized-domain'))return'Este endereço (domínio) não está autorizado no Firebase. Vá em Authentication → Settings → Authorized domains e adicione '+location.hostname+'.';
-  if(c.includes('operation-not-allowed'))return'A Autenticação Anônima está desativada. Ative em Authentication → Sign-in method → Anonymous.';
-  if(c==='timeout')return'O banco de dados demorou demais para responder. Verifique sua internet e tente novamente.';
-  return'Falha na autenticação: '+(authErro.message||c);
-}
-authPromise.then(()=>{
-  if(!authPronto){
-    const p=document.getElementById('painelLista');
-    if(p)p.innerHTML='<div class="err">'+msgErroAuth()+'</div>';
-  }
-});
 
 /* ============ PWA (manifest dinâmico) ============ */
 try{
@@ -518,16 +489,11 @@ function mostrarCadastro(){document.getElementById('cardLogin').classList.add('h
 function mostrarLogin(){document.getElementById('cardCadastro').classList.add('hide');document.getElementById('cardLogin').classList.remove('hide');}
 
 /* ============ LISTENERS GLOBAIS FIREBASE ============ */
-authPromise.then(()=>{
-  db.ref('ramais').on('value',snap=>{
-    ramaisCache=snap.val()||{};
-    renderPainel();renderTelefone();renderAdmin();popularChatDest();
-  },e=>{
-    console.error(e);
-    document.getElementById('painelLista').innerHTML='<div class="err">Sem permissão de acesso ao banco de dados (PERMISSION_DENIED). Confira as Regras do Realtime Database e se a Autenticação Anônima está ativada.</div>';
-  });
-  db.ref('usuarios').on('value',snap=>{usuariosCache=snap.val()||{};renderAdmin();});
-});
+db.ref('ramais').on('value',snap=>{
+  ramaisCache=snap.val()||{};
+  renderPainel();renderTelefone();renderAdmin();popularChatDest();
+},e=>{document.getElementById('painelLista').innerHTML='<div class="err">Sem permissão de acesso ao banco de dados (PERMISSION_DENIED: libere as regras do Realtime Database.</div>';});
+db.ref('usuarios').on('value',snap=>{usuariosCache=snap.val()||{};renderAdmin();});
 
 function nomeSt(st){return st==='online'?'ATIVO':st==='ocupado'?'EM CHAMADA':st==='dnd'?'NÃO PERTURBE':'INATIVO';}
 function renderPainel(){
@@ -556,8 +522,6 @@ async function cadastrar(){
   if(!window.crypto||!crypto.subtle)return err.innerText="Abra em HTTPS (ou localhost).";
   try{
     err.innerText="Verificando…";
-    await authPromise;
-    if(!authPronto){err.innerText=msgErroAuth();return;}
     if((await db.ref('usuarios/'+login).once('value')).exists()){err.innerText="Este usuário já existe.";return;}
     if((await db.ref('ramais/'+ramal).once('value')).exists()){err.innerText="O ramal "+ramal+" já pertence a outro usuário.";return;}
     const total=(await db.ref('usuarios').once('value')).numChildren();
@@ -578,12 +542,7 @@ async function login(){
   const err=document.getElementById('lErr');err.innerText='';
   if(!l||!p)return err.innerText="Preencha usuário e senha.";
   let snap;
-  err.innerText="Verificando…";
-  try{
-    await authPromise;
-    if(!authPronto){err.innerText=msgErroAuth();return;}
-    snap=await db.ref('usuarios/'+l).once('value');
-  }
+  try{snap=await db.ref('usuarios/'+l).once('value');}
   catch(e){return err.innerText=String(e).includes('PERMISSION')?"Sem permissão no banco de dados: libere as regras.":"Erro de conexão.";}
   if(!snap.exists())return err.innerText="Usuário não encontrado.";
   const u=snap.val();
@@ -621,7 +580,6 @@ function logout(){
 }
 
 window.addEventListener('load',async()=>{
-  await authPromise;
   const s=localStorage.getItem('sessao');
   if(!s)return;
   try{
